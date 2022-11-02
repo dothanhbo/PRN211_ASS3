@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using XSystem.Security.Cryptography;
 
 namespace DataAccess.DAO
 {
@@ -45,7 +47,7 @@ namespace DataAccess.DAO
                 {
                     MemberId = 0,
                     Email = email,
-                    Password = password,
+                    Password = MD5Hash(password),
                     City = "",
                     Country = "",
                     CompanyName = ""
@@ -79,7 +81,7 @@ namespace DataAccess.DAO
             try
             {
                 IEnumerable<Member> members = GetMembersList();
-                member = members.SingleOrDefault(mb => mb.Email.Equals(email) && mb.Password.Equals(password));
+                member = members.SingleOrDefault(mb => mb.Email.Equals(email) && mb.Password.Equals(MD5Hash(password)));
                 if (member == null)
                 {
                     throw new Exception("Login failed! Please check your email and password!!");
@@ -150,6 +152,7 @@ namespace DataAccess.DAO
                 if (GetMember(member.MemberId) == null && GetMember(member.Email) == null)
                 {
                     var context = new SalesManagementContext();
+                    member.Password = MD5Hash(member.Password);
                     context.Members.Add(member);
                     context.SaveChanges();
                 }
@@ -264,6 +267,20 @@ namespace DataAccess.DAO
             }
             searchResult = memberSearch.ToList();
             return searchResult;
+        }
+
+
+        private static string MD5Hash(string password)
+        {
+            StringBuilder hash = new StringBuilder();
+            MD5CryptoServiceProvider md5provider = new MD5CryptoServiceProvider();
+            byte[] bytes = md5provider.ComputeHash(new UTF8Encoding().GetBytes(password));
+
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                hash.Append(bytes[i].ToString("x2"));
+            }
+            return hash.ToString();
         }
     }
 }

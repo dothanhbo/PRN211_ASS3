@@ -44,7 +44,7 @@ namespace eStore.Controllers
             orderDetailRepository = new OrderDetailRepository();
         }
 
-        
+
         public async Task<IActionResult> Index(DateTime? start, DateTime? end, int? page)
         {
             try
@@ -73,14 +73,15 @@ namespace eStore.Controllers
                 else if ((start != null && end == null) || (start == null && end != null))
                 {
                     throw new Exception("Please fill both of the Start and End Date inputs to filter or leave them blank!");
-                } else if (start == null && end == null)
+                }
+                else if (start == null && end == null)
                 {
                     ViewBag.Start = orders.Min(or => or.OrderDate).Date.ToString("yyyy-MM-dd");
                     ViewBag.End = orders.Max(or => or.OrderDate).Date.ToString("yyyy-MM-dd");
                 }
 
                 List<OrderExportData> orderExport = new List<OrderExportData>();
-                
+
                 foreach (var order in orders)
                 {
                     decimal total = orderDetailRepository.GetOrderTotal(order.OrderId);
@@ -97,7 +98,8 @@ namespace eStore.Controllers
                 int pageSize = 10;
 
                 return View(await PaginatedList<Order>.CreateAsync(orders.AsQueryable(), page ?? 1, pageSize));
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 ViewBag.Error = ex.Message;
                 return View();
@@ -113,7 +115,7 @@ namespace eStore.Controllers
                     throw new Exception("Order ID is not found!!!");
                 }
                 Order order = orderRepository.GetOrder(id.Value);
-                
+
                 if (order == null)
                 {
                     throw new Exception("Product ID is not found!!!");
@@ -170,74 +172,16 @@ namespace eStore.Controllers
                 orderRepository.DeleteOrder(id);
                 TempData["Delete"] = "Delete Order with the ID <strong>" + id + "</strong> successfully!!";
                 return RedirectToAction(nameof(Index));
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 ViewBag.Error = ex.Message;
                 return View();
             }
         }
 
-        public IActionResult Export()
-        {
-            try
-            {
-                IEnumerable<OrderExportData> orderData = HttpContext.Session.GetComplexData<IEnumerable<OrderExportData>>("OrderData");
-                //return Json(orderData);
-                DataTable dtOrder = new DataTable("OrderReport");
-                orderData = orderData.ToList();
-                dtOrder.Columns.AddRange(new DataColumn[4]
-                {
-                    new DataColumn("OrderID"),
-                    new DataColumn("Email"),
-                    new DataColumn("OrderDate"),
-                    new DataColumn("OrderTotal")
-                });
-
-                foreach (var order in orderData)
-                {
-                    dtOrder.Rows.Add(order.OrderID, order.Email, order.OrderDate, order.OrderTotal);
-                }
-
-                ExportToExcel(dtOrder);
-                return null;
-            } catch (Exception ex)
-            {
-                //return Json(ex.Message);
-                //ViewBag.Error = ex.Message;
-                return null;
-            }
-        }
-
-        private void ExportToExcel(DataTable orders)
-        {
-            using (var workbook = new XLWorkbook())
-            {
-                var worksheet = workbook.Worksheets.Add("Orders");
-                var currentRow = 1;
-                worksheet.Cell(currentRow, 1).Value = "Order ID";
-                worksheet.Cell(currentRow, 2).Value = "Email";
-                worksheet.Cell(currentRow, 3).Value = "Order Date";
-                worksheet.Cell(currentRow, 4).Value = "Order Total";
-
-                for (int i = 0; i < orders.Rows.Count; i++)
-                {
-                    currentRow++;
-                    worksheet.Cell(currentRow, 1).Value = orders.Rows[i]["OrderID"];
-                    worksheet.Cell(currentRow, 2).Value = orders.Rows[i]["Email"];
-                    worksheet.Cell(currentRow, 3).Value = orders.Rows[i]["OrderDate"];
-                    worksheet.Cell(currentRow, 4).Value = orders.Rows[i]["OrderTotal"];
-                }
-
-                using var stream = new MemoryStream();
-                workbook.SaveAs(stream);
-                var content = stream.ToArray();
-                Response.Clear();
-                Response.Headers.Add("content-disposition", "attachment;filename=OrderReport.xls");
-                Response.ContentType = "application/xls";
-                Response.Body.WriteAsync(content);
-                Response.Body.Flush();
-            }
-        }
 
     }
+
+    
 }

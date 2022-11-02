@@ -11,7 +11,7 @@
 		[CompanyName] [varchar](40) NOT NULL,
 		[City] [varchar](15) NOT NULL,
 		[Country] [varchar](15) NOT NULL,
-		[Password] [varchar](30) NOT NULL
+		[Password] [varchar](100) NOT NULL
 	 )
 	CREATE TABLE Orders(
 		[orderId] [int] IDENTITY(1,1) NOT NULL primary key,
@@ -32,7 +32,7 @@
 	 )
  
 	CREATE TABLE OrderDetails(
-		[orderId][int] IDENTITY(1,1) NOT NULL  FOREIGN KEY REFERENCES Orders(orderId),
+		[orderId][int] NOT NULL  FOREIGN KEY REFERENCES Orders(orderId),
 		[ProductId] [int] NOT NULL FOREIGN KEY REFERENCES Products(ProductId),
 		[Quantity] [int] NOT NULL,
 		[UnitPrice][money] NOT NULL,
@@ -53,11 +53,8 @@
 	insert into Orders(MemberId, OrderDate)
 	values (1,'10/18/2022 9:00'),
 		   (2,'12/30/2022 10:00')
-	SET IDENTITY_INSERT OrderDetails ON
 	insert into OrderDetails(OrderId, ProductId, Quantity,UnitPrice, Discount)
 	values (1,2,5,200000,0),
 		   (1,3,1,300000,0),
 		   (1,4,2,100000,0),
 		   (2,1,2,100000,0)
-	SET IDENTITY_INSERT OrderDetails OFF
-	GO
